@@ -1,0 +1,66 @@
+import { DiagnosticCollection, Disposable, OutputChannel, TextDocument } from 'vscode';
+import { BaseLanguageClient, DidChangeTextDocumentParams, DidCloseTextDocumentParams, InitializeResult, LanguageClientOptions, PublishDiagnosticsParams } from 'vscode-languageclient/node';
+import { LeanFileProgressProcessingInfo, ServerStoppedReason } from '@leanprover/infoview-api';
+import { ExtUri } from './utils/exturi';
+export type ServerProgress = Map<ExtUri, LeanFileProgressProcessingInfo[]>;
+export declare class LeanClient implements Disposable {
+    private setupClient;
+    running: boolean;
+    private client;
+    private outputChannel;
+    folderUri: ExtUri;
+    private subscriptions;
+    private noPrompt;
+    private showingRestartMessage;
+    private elanDefaultToolchain;
+    private isRestarting;
+    private staleDepNotifier;
+    private openServerDocuments;
+    private didChangeEmitter;
+    didChange: import("vscode").Event<DidChangeTextDocumentParams>;
+    private diagnosticsEmitter;
+    diagnostics: import("vscode").Event<PublishDiagnosticsParams>;
+    private didSetLanguageEmitter;
+    didSetLanguage: import("vscode").Event<string>;
+    private didCloseEmitter;
+    didClose: import("vscode").Event<DidCloseTextDocumentParams>;
+    private customNotificationEmitter;
+    /** Fires whenever a custom notification (i.e. one not defined in LSP) is received. */
+    customNotification: import("vscode").Event<{
+        method: string;
+        params: any;
+    }>;
+    /** saved progress info in case infoview is opened, it needs to get all of it. */
+    progress: ServerProgress;
+    private progressChangedEmitter;
+    progressChanged: import("vscode").Event<[string, LeanFileProgressProcessingInfo[]]>;
+    private stoppedEmitter;
+    stopped: import("vscode").Event<ServerStoppedReason>;
+    private restartedEmitter;
+    restarted: import("vscode").Event<unknown>;
+    private restartingEmitter;
+    restarting: import("vscode").Event<unknown>;
+    private restartedWorkerEmitter;
+    restartedWorker: import("vscode").Event<string>;
+    private serverFailedEmitter;
+    serverFailed: import("vscode").Event<string>;
+    constructor(folderUri: ExtUri, outputChannel: OutputChannel, elanDefaultToolchain: string, setupClient: (clientOptions: LanguageClientOptions, folderUri: ExtUri, elanDefaultToolchain: string) => Promise<BaseLanguageClient>);
+    dispose(): void;
+    showRestartMessage(restartFile?: boolean, uri?: ExtUri | undefined): void;
+    restart(): Promise<void>;
+    private startClient;
+    private checkForImportsOutdatedError;
+    withStoppedClient(action: () => Promise<void>): Promise<'Success' | 'IsRestarting'>;
+    isInFolderManagedByThisClient(uri: ExtUri): boolean;
+    getClientFolder(): ExtUri;
+    start(): Promise<void>;
+    isStarted(): boolean;
+    isRunning(): boolean;
+    stop(): Promise<void>;
+    restartFile(doc: TextDocument): Promise<void>;
+    sendRequest(method: string, params: any): Promise<any>;
+    sendNotification(method: string, params: any): Promise<void> | undefined;
+    getDiagnostics(): DiagnosticCollection | undefined;
+    get initializeResult(): InitializeResult | undefined;
+    private obtainClientOptions;
+}
